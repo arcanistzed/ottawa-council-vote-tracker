@@ -43,17 +43,22 @@ def test_upload_skips_existing_meeting(monkeypatch):
         [{"id": "m_exist"}]
     )
 
-    def factory(token, base, name):
-        if name == "Meetings":
-            return meetings_table
-        if name == "Motions":
-            return motions_table
-        if name == "Votes":
-            return votes_table
-        if name == scraper.COUNCILLORS_TABLE or name == "Councillor":
-            return councillors_table
+    # New pyairtable.Api interface: Api(token).table(base, name)
+    class FakeApi:
+        def __init__(self, token):
+            self.token = token
 
-    monkeypatch.setattr(scraper, "Table", factory)
+        def table(self, base, name):
+            if name == "Meetings":
+                return meetings_table
+            if name == "Motions":
+                return motions_table
+            if name == "Votes":
+                return votes_table
+            if name == scraper.COUNCILLORS_TABLE or name == "Councillor":
+                return councillors_table
+
+    monkeypatch.setattr(scraper, "Api", FakeApi)
     # ensure env tokens present so upload runs
     scraper.AIRTABLE_TOKEN = "x"
     scraper.BASE_ID = "b"
@@ -81,17 +86,21 @@ def test_upload_creates_meeting_when_missing(monkeypatch):
 
     meetings_table, motions_table, votes_table, councillors_table = make_tables([])
 
-    def factory(token, base, name):
-        if name == "Meetings":
-            return meetings_table
-        if name == "Motions":
-            return motions_table
-        if name == "Votes":
-            return votes_table
-        if name == scraper.COUNCILLORS_TABLE or name == "Councillor":
-            return councillors_table
+    class FakeApi:
+        def __init__(self, token):
+            self.token = token
 
-    monkeypatch.setattr(scraper, "Table", factory)
+        def table(self, base, name):
+            if name == "Meetings":
+                return meetings_table
+            if name == "Motions":
+                return motions_table
+            if name == "Votes":
+                return votes_table
+            if name == scraper.COUNCILLORS_TABLE or name == "Councillor":
+                return councillors_table
+
+    monkeypatch.setattr(scraper, "Api", FakeApi)
     scraper.AIRTABLE_TOKEN = "x"
     scraper.BASE_ID = "b"
 
