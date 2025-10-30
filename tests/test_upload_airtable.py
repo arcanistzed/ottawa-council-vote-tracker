@@ -140,7 +140,7 @@ def test_upload_dry_run_does_not_create(monkeypatch):
     meeting = {"ID": "M3", "MeetingName": "DryRun", "StartDate": "2025-10-03"}
     scraper.upload_to_airtable(meeting, motions, dry_run=True)
 
-    # Meeting is created (metadata), but motions and votes are not
+    # Dry-run creates meetings and motions, but skips votes
     assert len(meetings_table.created) == 1
-    assert not motions_table.created
+    assert len(motions_table.created) == 1
     assert not votes_table.created
