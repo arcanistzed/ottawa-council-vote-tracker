@@ -99,7 +99,7 @@ def parse_votes(html: str) -> List[Dict[str, Any]]:
                 r"\band\b", ",", names_el.get_text(" ", strip=True), flags=re.I
             )
             names = [
-                re.sub(r"\s+", " ", n.strip(" ,\u00a0"))
+                re.sub(r"\s+", " ", n.strip(" ,")).strip()
                 for n in re.split(r"[;,]", names)
                 if n.strip()
             ]

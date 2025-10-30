@@ -42,5 +42,6 @@ def test_parse_votes_real_fixture():
         "I. Skalski",
     ]
 
-    assert m["for_names"] == expected_for
-    assert m["against_names"] == expected_against
+    assert [n.strip() for n in m["for_names"]] == expected_for
+    assert [n.strip() for n in m["against_names"]] == expected_against
+

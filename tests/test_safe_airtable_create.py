@@ -25,3 +25,18 @@ def test_safe_airtable_create_gives_up():
     t = FlakyTable(fail_times=5)
     rec = scraper.safe_airtable_create(t, {"foo": "bar"}, max_retries=3)
     assert rec is None
+
+def test_safe_airtable_create_retries(monkeypatch):
+    calls = []
+    def flaky_create(payload):
+        calls.append(payload)
+        if len(calls) < 3:
+            raise RuntimeError("temporary failure")
+        return {"id": "rec_ok"}
+
+    class FakeTable:
+        def create(self, payload): return flaky_create(payload)
+
+    rec = scraper.safe_airtable_create(FakeTable(), {"foo": "bar"}, max_retries=5)
+    assert rec["id"] == "rec_ok"
+    assert len(calls) == 3  # retried twice, then succeeded
