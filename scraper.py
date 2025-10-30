@@ -199,7 +199,7 @@ def get_or_create_councillor(t_councillors, name: str) -> str | None:
     return None
 
 
-def upload_to_airtable(meeting, motions, dry_run=False):
+def upload_to_airtable(meeting, motions):
     motions = [m for m in motions if m["for_names"] or m["against_names"]]
     logger.info(
         "%s: %d divided motions found", meeting.get("MeetingName"), len(motions)
@@ -260,7 +260,7 @@ def upload_to_airtable(meeting, motions, dry_run=False):
             (n, "No") for n in motion["against_names"]
         ]:
             cid = get_or_create_councillor(t_councillors, name)
-            if cid and not dry_run:
+            if cid:
                 safe_airtable_create(
                     t_votes, {"Motion": [mot["id"]], "Councillor": [cid], "Vote": vote}
                 )
@@ -272,7 +272,6 @@ if __name__ == "__main__":
 
     p = argparse.ArgumentParser(description="Scrape Ottawa Council vote records")
     p.add_argument("--since", help="Scrape meetings starting from YYYY-MM-DD")
-    p.add_argument("--dry-run", action="store_true", help="Parse only, no upload")
     p.add_argument("--clear", action="store_true", help="Delete all Airtable records")
     p.add_argument("--yes", action="store_true", help="Skip confirmation prompts")
     a = p.parse_args()
@@ -282,7 +281,7 @@ if __name__ == "__main__":
         clear_airtable(api, force=a.yes)
         sys.exit(0)
 
-    if not a.dry_run and (not AIRTABLE_TOKEN or not BASE_ID):
+    if not AIRTABLE_TOKEN or not BASE_ID:
         logger.error("Missing AIRTABLE_TOKEN or AIRTABLE_BASE_ID.")
         sys.exit(1)
 
@@ -307,6 +306,6 @@ if __name__ == "__main__":
                     logger.info(
                         "%s: %d motions parsed", m.get("MeetingName"), len(motions)
                     )
-                    upload_to_airtable(m, motions, dry_run=a.dry_run)
+                    upload_to_airtable(m, motions)
 
     logger.info("Scraping completed successfully.")

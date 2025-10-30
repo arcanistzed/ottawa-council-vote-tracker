@@ -114,33 +114,3 @@ def test_upload_creates_meeting_when_missing(monkeypatch):
     assert len(motions_table.created) == 1
     expected_votes = len(motions[0]["for_names"]) + len(motions[0]["against_names"])
     assert len(votes_table.created) == expected_votes
-
-
-def test_upload_dry_run_does_not_create(monkeypatch):
-    meetings_table, motions_table, votes_table, councillors_table = make_tables([])
-    scraper.AIRTABLE_TOKEN = "x"
-    scraper.BASE_ID = "b"
-
-    class FakeApi:
-        def __init__(self, token):
-            self.token = token
-
-        def table(self, base, name):
-            return {
-                "Meetings": meetings_table,
-                "Motions": motions_table,
-                "Votes": votes_table,
-                scraper.COUNCILLORS_TABLE: councillors_table,
-            }[name]
-
-    monkeypatch.setattr(scraper, "Api", FakeApi)
-
-    html = Path("tests/fixtures/sample_minutes.html").read_text(encoding="utf-8")
-    motions = scraper.parse_votes(html)
-    meeting = {"ID": "M3", "MeetingName": "DryRun", "StartDate": "2025-10-03"}
-    scraper.upload_to_airtable(meeting, motions, dry_run=True)
-
-    # Dry-run creates meetings and motions, but skips votes
-    assert len(meetings_table.created) == 1
-    assert len(motions_table.created) == 1
-    assert not votes_table.created
